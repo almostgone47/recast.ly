@@ -1,35 +1,78 @@
 import VideoList from './VideoList.js';
 import VideoPlayer from './VideoPlayer.js';
+import Search from './Search.js';
 import exampleVideoData from './../data/exampleVideoData.js';
-
+import searchYouTube from './../lib/searchYouTube.js';
+import YOUTUBE_API_KEY from './../config/youtube.js';
+var MAX_RESULTS = 5;
 class App extends React.Component {
   constructor() {
     super();
 
     this.state = {
       currentlyPlaying: exampleVideoData[0],
-      videoListData: exampleVideoData
+      videoListData: []
     };
   }
 
-  currentPlayingStateUpdater(newVal) {
-    this.setState({
-      currentlyPlaying: newVal
+  // helper function to search through data and find matching video
+  // based off of video title
+  findVideo(title) {
+    this.state.videoListData.forEach(video => {
+      if (video.snippet.title === title) {
+        this.setState({
+          currentlyPlaying: video
+        });
+      }
     });
   }
 
   changeSongHandler(event, video) {
-    var songObj = video;
-    console.log(arguments);
-    this.currentPlayingStateUpdater(arguments[0]);
+    this.findVideo(event.target.innerText);
   }
 
-  render() {
+  liveSearchHandler(e) {
+    searchYouTube({
+      key: YOUTUBE_API_KEY,
+      maxResults: MAX_RESULTS,
+      query: e.target.parentNode.children[0].value
+    }, (data)=>{
+      this.searchResultsHandler(data);
+    });
+  }
+
+  searchHandler(e) {
+    searchYouTube({
+      key: YOUTUBE_API_KEY,
+      maxResults: MAX_RESULTS,
+      query: e.target.parentNode.children[0].value
+    }, (data)=>{
+      this.searchResultsHandler(data);
+    });
+  }
+
+  searchResultsHandler(videoList) {
+    this.setState({
+      videoListData: videoList
+    });
+  }
+
+  componentDidMount() {
+    searchYouTube({
+      key: YOUTUBE_API_KEY,
+      maxResults: MAX_RESULTS,
+      query: 'rick astley'
+    }, (data)=>{
+      this.searchResultsHandler(data);
+    });
+  }
+
+  render(props) {
     return (
       <div>
         <nav className="navbar">
           <div className="col-md-6 offset-md-3">
-            <div><h5><em>search</em> view goes here</h5></div>
+            <Search searchHandler={this.searchHandler.bind(this)} liveSearchHandler={this.liveSearchHandler.bind(this)}/>
           </div>
         </nav>
         <div className="row">
