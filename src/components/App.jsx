@@ -6,8 +6,8 @@ import searchYouTube from './../lib/searchYouTube.js';
 import YOUTUBE_API_KEY from './../config/youtube.js';
 var MAX_RESULTS = 5;
 class App extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
 
     this.state = {
       currentlyPlaying: exampleVideoData[0],
@@ -29,16 +29,6 @@ class App extends React.Component {
 
   changeSongHandler(event, video) {
     this.findVideo(event.target.innerText);
-  }
-
-  liveSearchHandler(e) {
-    searchYouTube({
-      key: YOUTUBE_API_KEY,
-      maxResults: MAX_RESULTS,
-      query: e.target.parentNode.children[0].value
-    }, (data)=>{
-      this.searchResultsHandler(data);
-    });
   }
 
   searchHandler(e) {
@@ -68,11 +58,15 @@ class App extends React.Component {
   }
 
   render(props) {
+    const debouncedLiveSearchHandler = (event) => {
+      event.persist();
+      _.debounce(()=>{ this.searchHandler(event); }, 500)();
+    };
     return (
       <div>
         <nav className="navbar">
           <div className="col-md-6 offset-md-3">
-            <Search searchHandler={this.searchHandler.bind(this)} liveSearchHandler={this.liveSearchHandler.bind(this)}/>
+            <Search searchHandler={this.searchHandler.bind(this)} liveSearchHandler={debouncedLiveSearchHandler.bind(this)}/>
           </div>
         </nav>
         <div className="row">
